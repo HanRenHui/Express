@@ -20,7 +20,7 @@ Router.prototype.handler = function (req,res, out) {
     if (index >= this.layers.length) {
       return out()
     }
-    let layer = this.layers[index++]
+    let layer = this.layers[index++] 
     let { pathname } = url.parse(req.url)
     if ((pathname === layer.path) && (layer.methods[req.method.toLowerCase()])) {
       layer.callhandler(req, res, next)
