@@ -1,12 +1,16 @@
 let Router = require('./router')
 let http = require('http')
+let methods = require('methods')
 function Application() {
   this._router = new Router()
 }
 
-Application.prototype.get = function (path, handler) {
-  this._router.get(path, handler)
-}
+methods.forEach(method => {
+  Application.prototype[method] = function (path, ...handler) {
+    this._router[method](path, ...handler)
+  }
+})
+
 
 Application.prototype.listen = function (...params) {
 

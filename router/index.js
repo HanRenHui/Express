@@ -1,18 +1,26 @@
 let Layer = require('./layer')
 let Route = require('./route')
 let url = require('url')
+let methods = require('methods')
 function Router() {
   this.layers = []
 }
 
-Router.prototype.get = function (path, handler) {
-  let route = new Route() 
-  route.get(handler)
-  let layer = new Layer(path, route.dispatch.bind(route))
-  layer.methods['get'] = true
-  layer.route = route
-  this.layers.push(layer)
-}
+methods.forEach(method => {
+  
+  Router.prototype[method] = function (path, ...handler) {
+    let route = new Route() 
+    // 往route的同一层里添加
+    route[method](...handler)
+    let layer = new Layer(path, route.dispatch.bind(route))
+    layer.methods[method] = true
+    layer.route = route 
+    // 往栈里添加
+    this.layers.push(layer)
+  }
+})
+
+
 
 Router.prototype.handler = function (req,res, out) {
   let index = 0
@@ -21,6 +29,7 @@ Router.prototype.handler = function (req,res, out) {
       return out()
     }
     let layer = this.layers[index++] 
+    
     let { pathname } = url.parse(req.url)
     if ((pathname === layer.path) && (layer.methods[req.method.toLowerCase()])) {
       layer.callhandler(req, res, next)
