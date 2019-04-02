@@ -24,7 +24,7 @@ methods.forEach(method => {
 
 Router.prototype.handler = function (req,res, out) {
   let index = 0
-  const next = () => {
+  const next = err => {
     if (index >= this.layers.length) {
       return out()
     }
@@ -32,7 +32,12 @@ Router.prototype.handler = function (req,res, out) {
     
     let { pathname } = url.parse(req.url)
     if ((pathname === layer.path) && (layer.methods[req.method.toLowerCase()])) {
-      layer.callhandler(req, res, next)
+      // 处理错误
+      if (err) {
+        layer.handle_error(err, req, res, next)
+      } else {
+        layer.callhandler(req, res, next)
+      }
     } else {
       next()
     }

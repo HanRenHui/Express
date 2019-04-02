@@ -18,13 +18,15 @@ methods.forEach((method) => {
 
 Route.prototype.dispatch = function (req, res, out) {
   let index = 0
-  const next = () => {
+  const next = (err) => {
     if (index >= this.layers.length) {
       // 这个地方其实是继续往下一层走
       return out()
     }
+    if (err) {
+      return out(err)
+    }
     let layer = this.layers[index++]
-    console.log(layer);
     
     if (layer.method === req.method.toLowerCase()) {
       layer.callhandler(req, res, next)

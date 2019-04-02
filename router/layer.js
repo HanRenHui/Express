@@ -10,4 +10,12 @@ Layer.prototype.callhandler = function (req, res, out) {
   this.handler(req, res, out)
 }
 
+Layer.prototype.handle_error = function (err, req, res, next) {
+  if (this.handler.length === 4) {
+    this.handler(err,req, res, next)
+  } else {
+    next()
+  }
+
+}
 module.exports = Layer
