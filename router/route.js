@@ -1,40 +1,46 @@
-let Layer = require('./layer')
-let methods = require('methods')
-function Route() {
-  this.layers = []
+const Layer = require('./layer');
+const methods = require('methods');
+const slice = Array.prototype.slice;
+function Route(path) {
+    this.path = path;
+    this.stack = [];
+    //表示此路由有有此方法的处理函数
+    this.methods = {};
 }
-
-methods.forEach((method) => {
-  Route.prototype[method] = function (...handler) {
-    handler.forEach(h => {
-      let layer = new Layer('/', h)
-      layer.method = method
-      this.layers.push(layer)  
-    })
-
-  }
-})
-
+Route.prototype.handle_method = function (method) {
+    method = method.toLowerCase();
+    return this.methods[method];
+}
+methods.forEach(function (method) {
+    Route.prototype[method] = function () {
+        let handlers = slice.call(arguments);
+        this.methods[method] = true;
+        for (let i = 0; i < handlers.length; i++) {
+            let layer = new Layer('/', handlers[i]);
+            layer.method = method;
+            this.stack.push(layer);
+        }
+        this.methods[method] = true;
+        return this;
+    }
+});
 
 Route.prototype.dispatch = function (req, res, out) {
-  let index = 0
-  const next = (err) => {
-    if (index >= this.layers.length) {
-      // 这个地方其实是继续往下一层走
-      return out()
+    let idx = 0, self = this;
+    function next(err) {
+        if (err) {//如果一旦在路由函数中出错了，则会跳过当前路由
+            return out(err);
+        }
+        if (idx >= self.stack.length) {
+            return out();//route.dispath里的out刚好是Router的next
+        }
+        let layer = self.stack[idx++];
+        if (layer.method == req.method.toLowerCase()) {
+            layer.callhandler(req, res, next);
+        } else {
+            next();
+        }
     }
-    if (err) {
-      return out(err)
-    }
-    let layer = this.layers[index++]
-    
-    if (layer.method === req.method.toLowerCase()) {
-      layer.callhandler(req, res, next)
-    } else {
-      next()
-    }
-  }
-  next()
+    next();
 }
-
-module.exports = Route
+module.exports = Route;

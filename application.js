@@ -12,6 +12,11 @@ methods.forEach(method => {
 })
 
 
+// 中间件和普通的路由都是放在同一个数组
+Application.prototype.use = function (path, handler) {
+  this._router.use.call(this._router,path, handler)
+}
+
 Application.prototype.listen = function (...params) {
 
   http.createServer((req, res) => {
