@@ -2,7 +2,7 @@ let Layer = require('./layer')
 let Route = require('./route')
 let url = require('url')
 let methods = require('methods')
-
+let init = require('./midlle/init')
 let proto = Object.create(null)
 
 function Router() {
@@ -13,7 +13,10 @@ function Router() {
   router.stack = []
   // router.stucks = []
   Object.setPrototypeOf(router, proto)
+  // 处理query, 内置中间件
+  router.use(init)
   return router
+
 }
 
 
@@ -34,26 +37,20 @@ methods.forEach(method => {
 })
 
 proto.use = function (path, handler) {
-
   if (typeof handler !== 'function') {
     handler = path
     path = '/'
   }
   let layer = new Layer(path, handler)
-  
   // 这个字段用来区分中间件
   layer.route = undefined
-
   this.stack.push(layer)
-
 }
-
 
 proto.handler = function (req, res, out) {
   let index = 0
   // 被移除的字符串
   let removed = ''
-  // console.log(this.stack);
 
   const next = err => {
     if (removed.length > 0) {
