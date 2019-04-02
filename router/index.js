@@ -28,7 +28,6 @@ methods.forEach(method => {
     layer.methods[method] = true
     layer.route = route
 
-
     // 往栈里添加
     this.stack.push(layer)
   }

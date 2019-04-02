@@ -9,8 +9,11 @@ function Layer(path, handler) {
 Layer.prototype.matchPath = function (pathname) {
     if (this.path === pathname) {
         return true
-    } else if (pathname.startsWith(this.path)) {
-        return true
+    } 
+    if (!this.route) {
+        if (pathname.startsWith(this.path + '/') || this.path === '/') {
+            return true
+        }
     }
     return false
 }

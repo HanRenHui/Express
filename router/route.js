@@ -3,24 +3,21 @@ const methods = require('methods');
 const slice = Array.prototype.slice;
 function Route(path) {
     this.path = path;
-    this.stack = [];
-    //表示此路由有有此方法的处理函数
-    this.methods = {};
+    this.layers = [];
 }
 Route.prototype.handle_method = function (method) {
     method = method.toLowerCase();
     return this.methods[method];
 }
 methods.forEach(function (method) {
-    Route.prototype[method] = function () {
-        let handlers = slice.call(arguments);
-        this.methods[method] = true;
-        for (let i = 0; i < handlers.length; i++) {
-            let layer = new Layer('/', handlers[i]);
+    Route.prototype[method] = function (...handler) {
+        // push一层中所有的处理函数
+        for (let i = 0; i < handler.length; i++) {
+            let layer = new Layer('/', handler[i]);
             layer.method = method;
-            this.stack.push(layer);
+            this.layers.push(layer);
         }
-        this.methods[method] = true;
+        // this.methods[method] = true;
         return this;
     }
 });
@@ -31,10 +28,10 @@ Route.prototype.dispatch = function (req, res, out) {
         if (err) {//如果一旦在路由函数中出错了，则会跳过当前路由
             return out(err);
         }
-        if (idx >= self.stack.length) {
+        if (idx >= self.layers.length) {
             return out();//route.dispath里的out刚好是Router的next
         }
-        let layer = self.stack[idx++];
+        let layer = self.layers[idx++];
         if (layer.method == req.method.toLowerCase()) {
             layer.callhandler(req, res, next);
         } else {
