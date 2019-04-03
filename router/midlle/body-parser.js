@@ -61,19 +61,30 @@ function txt() {
     let contentType = req.headers['content-type']
     let type = contentType.split(';')[0]
     let charset = contentType.split(';')[1].split('=')[1]
+    // 看是否压缩过
+    let encoding = req.headers['content-encoding']
+  
     if (type === 'text/plain') {
       let buffer = []
       req.on('data', data => {
         buffer.push(data)
       })
       req.on('end', () => {
+
         let result = Buffer.concat(buffer)
-        if (charset) {
-          req.body = iconv.decode(result, charset)
-        } else {
-          req.body = result.toString()
+        if (encoding === 'gzip') {
+          // let r = zlib.gunzip(result)
+          zlib.gunzip(result, (err, data) => {
+            // console.log(data);
+            if (charset) {
+              req.body = iconv.decode(data, charset)
+            } else {
+              req.body = result.toString()
+            }
+            next()
+          })
         }
-        next()
+       
       })
     }
   }
